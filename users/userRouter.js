@@ -3,8 +3,16 @@ const userDb = require("./userDb.js");
 
 const router = express.Router();
 
-router.post("/", (req, res) => {
+router.post("/", validateUser("name"), (req, res) => {
   // do your magic!
+  userDb
+    .insert(req.body)
+    .then((user) => {
+      res.status(201).json(user);
+    })
+    .catch((error) => {
+      console.log("POST/isert - user - catch error:", error);
+    });
 });
 
 router.post("/:id/posts", (req, res) => {
@@ -51,13 +59,22 @@ function validateUserId(req, res, next) {
       req.user = user;
       next();
     } else {
-      res.status(500).json({ message: "from middleware: user not found" });
+      res.status(500).json({ message: "from middleware:  invalid user id" });
     }
   });
 }
 
-function validateUser(req, res, next) {
-  // do your magic!
+function validateUser(prop) {
+  return function (req, res, next) {
+    // do your magic!
+    if (req.body[prop]) {
+      next();
+    } else {
+      res.status(400).json({
+        message: `from middleware: Please provide the ${prop}`,
+      });
+    }
+  };
 }
 
 function validatePost(req, res, next) {
