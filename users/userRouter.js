@@ -24,8 +24,9 @@ router.get("/", (req, res) => {
     });
 });
 
-router.get("/:id", (req, res) => {
+router.get("/:id", validateUserId, (req, res) => {
   // do your magic!
+  res.status(200).json(req.user);
 });
 
 router.get("/:id/posts", (req, res) => {
@@ -44,6 +45,15 @@ router.put("/:id", (req, res) => {
 
 function validateUserId(req, res, next) {
   // do your magic!
+  const { id } = req.params;
+  userDb.getById(id).then((user) => {
+    if (user) {
+      req.user = user;
+      next();
+    } else {
+      res.status(500).json({ message: "from middleware: user not found" });
+    }
+  });
 }
 
 function validateUser(req, res, next) {
