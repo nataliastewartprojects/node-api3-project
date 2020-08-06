@@ -1,6 +1,6 @@
 const express = require("express");
 const userDb = require("./userDb.js");
-
+const postDb = require("../posts/postDb");
 const router = express.Router();
 
 router.post("/", validateUser("name"), (req, res) => {
@@ -15,10 +15,13 @@ router.post("/", validateUser("name"), (req, res) => {
     });
 });
 
-router.post("/:id/posts", validatePost("text"), (req, res) => {
+router.post("/:id/posts", validateUserId, validatePost("text"), (req, res) => {
   // do your magic!
-  userDb
-    .insert(req.body)
+  // res.status(200).json({ message: "Hello is working" });
+  const userId = req.params.id;
+  const postInfo = { text: req.body.text, user_id: userId };
+  postDb
+    .insert(postInfo)
     .then((post) => {
       res.status(201).json(post);
     })
@@ -93,7 +96,7 @@ router.put("/:id", (req, res) => {
 
 function validateUserId(req, res, next) {
   // do your magic!
-  const { id } = req.params;
+  const id = req.params.id;
   userDb.getById(id).then((user) => {
     if (user) {
       req.user = user;
@@ -120,7 +123,6 @@ function validateUser(prop) {
 function validatePost(prop) {
   // do your magic!
   return function (req, res, next) {
-    // do your magic!
     if (req.body[prop]) {
       next();
     } else {
